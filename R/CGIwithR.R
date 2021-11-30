@@ -1,10 +1,25 @@
+#@ \name{CGIwithR-internal}
+#@ \title{Functions and Data Used Internally by the CGIwithR Package}
+
+#@ \alias{CGIparse}
+#@ \alias{ascii}
+#@ \alias{hexDecode}
+
+#@ \description{
+#@   Functions used in decoding the CGI query string
+#@ }
+
+#@ \author{David Firth, \email{d.firth@warwick.ac.uk}}
+#@ \keyword{internal}
+#@ \examples{}
+
 CGIparse <- function(string, collapse = TRUE,
                       boundary = getMultiPartBoundary())
 {
-    if(length(boundary)) 
+    if(length(boundary))
        return(parseMultiPartFormData(boundary, string, splitLines = TRUE))
-      
-    the.split.string <- lapply(strsplit(string, "&"), 
+
+    the.split.string <- lapply(strsplit(string, "&"),
                              function(string)strsplit(string, "="))[[1]]
     arglist <- lapply(the.split.string, function(pair) pair[2])
     names(arglist) <- sapply(the.split.string, function(pair) pair[1])
@@ -12,7 +27,7 @@ CGIparse <- function(string, collapse = TRUE,
 
     if(collapse) {
       ids = names(ans)[duplicated(names(ans))]
-            
+
       for(i in unique(ids)) {
          first <- match(i, names(ans))
          j = which(names(ans) == i)
@@ -23,7 +38,7 @@ CGIparse <- function(string, collapse = TRUE,
 
     ans
 }
-      
+
 hexDecode <- function(string){
     string <- gsub("\\+", " ", string)
     string <- gsub("%09", "\t", string)
@@ -59,7 +74,7 @@ function(title = character(0), css = character(0))
                })
     }
 
-    
+
     cat("</HEAD>\n\n<BODY>\n")
 }
 
@@ -77,7 +92,7 @@ br <- function(n = 1){
     cat(paste(rep("<BR>", n), collapse = ""), "\n")
     }
 
-tag <- function(tagname, ...) 
+tag <- function(tagname, ...)
 {
     if (getOption("useUnquotedTagnames")) {
         result <- as.character(substitute(tagname))
@@ -92,13 +107,13 @@ tag <- function(tagname, ...)
     }
     cat(paste("<", result, ">", sep = ""))
 }
-  
+
 untag <- function(tagname){
-    if (getOption("useUnquotedTagnames")) 
+    if (getOption("useUnquotedTagnames"))
         tagname <- as.character(substitute(tagname))
     cat("</", tagname, ">", sep = "")
 }
-  
+
 lf <- function(n = 1) cat(paste(rep("\n", n), sep = ""))
 
 comments <- function(text) cat("<!--", text, "-->")
@@ -106,12 +121,65 @@ comments <- function(text) cat("<!--", text, "-->")
 mailto <- function(text, address){
     cat("<a href=\"mailto:", address, "\">", text, "</a>", sep="")
 }
-    
+
 linkto <- function(text, URL){
     cat("<A href=\"", URL, "\">", text, "</A>", sep = "")
 }
 
- 
+#@ \name{webPNG}
+#@ \alias{webPNG}
+#@ \title{A Wrapper for the `bitmap' Graphics Device}
+#@ \description{
+#@   \code{webPNG} sets up a bitmap graphics device for graphs drawn within
+#@   a CGI script.
+#@ }
+#@ \usage{
+#@ webPNG(file, ..., graphDir)
+#@ }
+#@ \arguments{
+#@   \item{file}{A filename, as a character string}
+#@   \item{\dots}{Any other arguments to \code{bitmap}}
+#@   \item{graphDir}{the name of the directory in which to create the
+#@     image file. If this is missing, the global variable
+#@     of the same name is used. This argument therefore allows one
+#@     to use a value specific to an individual call.  See
+#@     \code{\link{img}} also.
+#@   }
+#@ }
+#@ \details{
+#@   Before \code{webPNG} is called, the variable
+#@   \code{graphDir} must be a character string giving the location
+#@   where graphics files will be written by R and found by the web server.
+#@   The directory specified in \code{graphDir} must be writeable and
+#@   readable by the web server in order to work.  For example, if
+#@   \code{graphDir} is \code{"/users/david/public_html/graphs/"} (note
+#@   the trailing \code{/}!), and if \code{file} is \code{"mygraph.png"},
+#@   the next graph will be written to
+#@   \code{"/users/david/public_html/graphs/mygraph.png"}, provided that
+#@   \code{/users/david/public_html/graphs} has suitable permissions.
+#@ }
+#@ \value{
+#@   None (\code{invisible(NULL)})
+#@ }
+#@ \author{David Firth \email{d.firth@warwick.ac.uk}}
+#@
+#@ \seealso{\code{\link{img}}}
+#@
+#@ \examples{
+#@ \dontrun{
+#@   graphDir <- "/users/david/public_html/graphs/"
+#@   webPNG("mygraph.png")
+#@   ## then do whatever plotting is required...
+#@
+#@
+#@   # Or, creating a JPEG image and specifying the output directory
+#@   # in the call rather than via the global variable.
+#@   webPNG("mygraph.png", type = "jpeg", graphDir = "/users/david/public_html/graphs/")
+#@   }
+#@ }
+#@ \keyword{interface}
+#@ \keyword{device}
+
 webPNG <- function(file, ..., graphDir){
     if (missing(graphDir)) {
       if(!exists("graphDir", envir = globalenv(), inherits = TRUE)) {
@@ -135,8 +203,8 @@ webPNG <- function(file, ..., graphDir){
     invisible(NULL)
 }
 
-    
-img <- function (src, ..., graphURLroot = "") 
+
+img <- function (src, ..., graphURLroot = "")
 {
     result <- src
     if(missing(graphURLroot)) {
@@ -232,13 +300,47 @@ img <- function (src, ..., graphURLroot = "")
   )
   )
 
+#@ \name{scanText}
+#@ \alias{scanText}
+#@ \title{Scan a Character String}
+#@ \description{
+#@   Useful for converting data entered via a HTML textarea, for example,
+#@   into a list or vector for further processing.
+#@ }
+#@ \usage{
+#@   scanText(string, what = character(0), \dots)
+#@ }
+#@ \arguments{
+#@   \item{string}{A character string, typically numbers or words
+#@     separated by white space}
+#@   \item{what}{As for \code{scan}.  The type of \code{what} gives the
+#@     type of data to be read.  If
+#@     \code{what} is a list, it is assumed that the lines of the data
+#@     file are records each containing \code{length(what)} items
+#@     (``fields'').  The supported types are \code{logical}, \code{integer},
+#@     \code{numeric}, \code{complex}, \code{character} and
+#@     \code{list}: \code{list} values
+#@     should have elements which are one of the first five types
+#@     listed or \code{NULL}.}
+#@   \item{\dots}{Other arguments to be passed to \code{scan}}
+#@ }
+#@ \value{
+#@   A list or vector.
+#@ }
+#@ \author{David Firth \email{d.firth@warwick.ac.uk}}
+#@ \examples{
+#@   scanText("A few short words")
+#@   as.numeric(scanText("1 2 3\n89 90"))
+#@   scanText("A B C \n 4 5 6", what = list("A", "A", "A", 0, 0, 0))
+#@ }
+#@ \keyword{interface}
 
 scanText <- function(string, what = character(0), ...){
     tc <- textConnection(string)
     result <- scan(tc, what = what, quiet = TRUE, ...)
     close(tc)
     return(result)}
-    
+
 indentPrint <- function(object, indent = 4, ...){
     tc <- textConnection("zz", "w", local = TRUE)
     sink(tc)
@@ -247,7 +349,7 @@ indentPrint <- function(object, indent = 4, ...){
     close(tc)
     indent <- paste(rep(" ", indent), sep = "", collapse = "")
     cat(paste(indent, zz, sep = ""), sep = "\n")}
-    
+
 .onLoad <- .First.lib <- function(lib, pkg){
     options(useUnquotedTagnames = TRUE)
     formData <<- Sys.getenv("FORM_DATA")
@@ -257,7 +359,7 @@ indentPrint <- function(object, indent = 4, ...){
         formData <<- as.list(Env[grep("^WWW\\_", Names)])
         names(formData) <<- sapply(names(formData), function(name){
                                     gsub("^WWW\\_", "", name)})
-    }   
+    }
     else formData <<- CGIparse(formData)
     }
 
