@@ -1,6 +1,6 @@
 Package: CG.IwithR
 Type: Package
-Title: CG.IwithR (戏剧之王)
+Title: CG.IwithR (戏剧之王/后 -- King/Queen of Comedy)
 Version: 0.2.1
 Authors@R: person("LIAN HU", "ENG", email = "englianhu@gmail.com", role = c("aut", "cre"))
 Maintainer: The package maintainer <yourself@somewhere.net>
